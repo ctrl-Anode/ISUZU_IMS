@@ -293,12 +293,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { auth, db } from '../../Firebase/Firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '../../composables/useAuth';
+import { db } from '../../Firebase/Firebase';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-//import Topbar from '../../components/Topbar.vue';
 import Loaders from '../../components/Loaders.vue';
+
 
 import {
   Package,
@@ -310,8 +309,9 @@ import {
   XCircle
 } from 'lucide-vue-next';
 
-const router = useRouter();
+const { user, isAuthenticated } = useAuth();
 const isLoading = ref(true);
+
 const inventoryItems = ref([]);
 const searchQuery = ref('');
 const filterCategory = ref('');
@@ -390,6 +390,15 @@ const loadInventory = async (uid) => {
   }
 };
 
+// Load inventory on mount
+const initializeInventory = async () => {
+  if (user.value) {
+    await loadInventory(user.value.uid);
+    isLoading.value = false;
+  }
+};
+
+
 // Computed filtered inventory
 const filteredInventory = computed(() => {
   return inventoryItems.value.filter(item => {
@@ -446,8 +455,8 @@ const savePart = async () => {
     return;
   }
 
-  const user = auth.currentUser;
-  if (!user) return;
+  if (!user.value) return;
+
 
   // Determine status based on quantity vs minLevel
   let status = 'in-stock';
@@ -465,15 +474,16 @@ const savePart = async () => {
 
   try {
     if (editingPart.value) {
-      await updateDoc(doc(db, 'users', user.uid, 'inventory', editingPart.value.id), partData);
+      await updateDoc(doc(db, 'users', user.value.uid, 'inventory', editingPart.value.id), partData);
     } else {
       partData.createdAt = new Date();
-      await addDoc(collection(db, 'users', user.uid, 'inventory'), partData);
+      await addDoc(collection(db, 'users', user.value.uid, 'inventory'), partData);
     }
-    await loadInventory(user.uid);
+    await loadInventory(user.value.uid);
     closeModal();
   } catch (error) {
     console.error('Error saving part:', error);
+
     alert('Error saving part. Please try again.');
   }
 };
@@ -481,27 +491,20 @@ const savePart = async () => {
 const deletePart = async (id) => {
   if (!confirm('Are you sure you want to delete this part?')) return;
 
-  const user = auth.currentUser;
-  if (!user) return;
+  if (!user.value) return;
 
   try {
-    await deleteDoc(doc(db, 'users', user.uid, 'inventory', id));
-    await loadInventory(user.uid);
+    await deleteDoc(doc(db, 'users', user.value.uid, 'inventory', id));
+    await loadInventory(user.value.uid);
   } catch (error) {
     console.error('Error deleting part:', error);
     alert('Error deleting part. Please try again.');
   }
 };
 
-// Auth check
+
+// Initialize
 onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      router.push('/');
-      return;
-    }
-    await loadInventory(user.uid);
-    isLoading.value = false;
-  });
+  initializeInventory();
 });
 </script>

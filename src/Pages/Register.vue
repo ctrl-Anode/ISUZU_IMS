@@ -184,11 +184,13 @@ import { useRouter } from "vue-router";
 import {
   createUserWithEmailAndPassword,
   updateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  signOut
 } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../Firebase/Firebase";
 import bgRegister from "../assets/isuzubg_login2.jpg";
+
 
 const bgImage = bgRegister;
 const router = useRouter();
@@ -242,12 +244,19 @@ const register = async () => {
 
     await sendEmailVerification(cred.user);
 
-    successMessage.value = "Registered! Please verify your email.";
-    setTimeout(() => router.push("/"), 2500);
+    // Sign out the user immediately so they can't access protected routes
+    await signOut(auth);
 
-  } catch {
+    successMessage.value = "Registration successful! Please check your email to verify your account before logging in.";
+    
+    // Redirect to login after showing message
+    setTimeout(() => router.push("/"), 3000);
+
+  } catch (err) {
+    console.error("Registration error:", err);
     error.value = "Registration failed. Try again.";
   }
+
 };
 
 function onContactInput(e) {

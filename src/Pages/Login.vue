@@ -8,7 +8,7 @@
           Login
         </h2>
 
-        <form @submit.prevent="login">
+        <form @submit.prevent="handleLogin">
           <!-- Username or Email -->
           <div class="mb-4">
             <label class="block text-gray-800 mb-1 font-medium">
@@ -38,6 +38,17 @@
             />
           </div>
 
+          <!-- Remember Me -->
+          <div class="mb-4 flex items-center">
+            <input
+              v-model="rememberMe"
+              type="checkbox"
+              id="remember"
+              class="mr-2"
+            />
+            <label for="remember" class="text-sm text-gray-600">Remember me</label>
+          </div>
+
           <!-- Session expired -->
           <p
             v-if="$route.query.session === 'expired'"
@@ -59,9 +70,10 @@
           <!-- Login Button -->
           <button
             type="submit"
-            class="w-full bg-gray-800 text-white py-2 rounded-lg font-medium hover:bg-gray-900 transition"
+            :disabled="isLoading"
+            class="w-full bg-gray-800 text-white py-2 rounded-lg font-medium hover:bg-gray-900 transition disabled:opacity-50"
           >
-            Login
+            {{ isLoading ? 'Logging in...' : 'Login' }}
           </button>
         </form>
 
@@ -71,7 +83,7 @@
             Your email is not verified.
           </p>
           <button
-            @click="resendVerificationEmail"
+            @click="resendVerification"
             :disabled="resendLoading"
             class="w-full bg-gray-300 text-gray-800 py-2 rounded-lg font-medium"
           >
@@ -84,7 +96,7 @@
 
         <!-- Register -->
         <p class="text-center text-sm text-gray-800 mt-6">
-          Don’t have an account?
+          Don't have an account?
           <router-link to="/register" class="text-red-600 underline">
             Register
           </router-link>
@@ -102,22 +114,11 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import {
-  signInWithEmailAndPassword,
-  sendEmailVerification
-} from "firebase/auth";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  updateDoc
-} from "firebase/firestore";
-import { auth, db } from "../Firebase/Firebase";
+import { ref, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useAuth } from "../composables/useAuth";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db } from "../Firebase/Firebase";
 
 import bgLogin from "../assets/isuzubg_login2.jpg";
 
@@ -125,22 +126,36 @@ const bgImage = bgLogin;
 
 const identifier = ref("");
 const password = ref("");
+const rememberMe = ref(false);
 const error = ref("");
 const successMessage = ref("");
 const showVerificationNotice = ref(false);
 const resendLoading = ref(false);
 const resendMessage = ref("");
+const isLoading = ref(false);
 
+const route = useRoute();
 const router = useRouter();
+const { login, resendVerification: authResendVerification, isAuthenticated } = useAuth();
 
-const login = async () => {
+// Redirect if already authenticated
+onMounted(() => {
+  if (isAuthenticated.value) {
+    const redirect = route.query.redirect || '/admin/dashboard';
+    router.push(redirect);
+  }
+});
+
+const handleLogin = async () => {
   error.value = "";
   successMessage.value = "";
   showVerificationNotice.value = false;
+  isLoading.value = true;
 
   try {
     let emailToLogin = identifier.value;
 
+    // If identifier is not an email, look up the username
     if (!identifier.value.includes("@")) {
       const q = query(
         collection(db, "Administrator"),
@@ -149,53 +164,44 @@ const login = async () => {
       const snap = await getDocs(q);
       if (snap.empty) {
         error.value = "Username not found.";
+        isLoading.value = false;
         return;
       }
       emailToLogin = snap.docs[0].data().email;
     }
 
-    const cred = await signInWithEmailAndPassword(
-      auth,
-      emailToLogin,
-      password.value
-    );
+    const result = await login(emailToLogin, password.value, rememberMe.value);
 
-    if (!cred.user.emailVerified) {
-      showVerificationNotice.value = true;
-      error.value = "Please verify your email first.";
+    if (!result.success) {
+      if (result.error === 'Please verify your email first.') {
+        showVerificationNotice.value = true;
+      }
+      error.value = result.error;
+      isLoading.value = false;
       return;
     }
 
-    const adminRef = doc(db, "Administrator", cred.user.uid);
-    const adminSnap = await getDoc(adminRef);
-    if (adminSnap.exists() && !adminSnap.data().emailVerified) {
-      await updateDoc(adminRef, { emailVerified: true });
-    }
-
     successMessage.value = "Login successful! Redirecting...";
-    setTimeout(() => router.push("/admin/dashboard"), 1200);
+    
+    // Redirect to intended page or dashboard
+    const redirect = route.query.redirect || '/admin/dashboard';
+    setTimeout(() => router.push(redirect), 1200);
 
   } catch (err) {
-    if (err.code === "auth/wrong-password") {
-      error.value = "Wrong password.";
-    } else if (err.code === "auth/user-not-found") {
-      error.value = "Account not found.";
-    } else {
-      error.value = "Login failed. Please try again.";
-    }
+    error.value = "Login failed. Please try again.";
+    isLoading.value = false;
   }
 };
 
-const resendVerificationEmail = async () => {
+const resendVerification = async () => {
   resendLoading.value = true;
-  try {
-    await sendEmailVerification(auth.currentUser);
+  const result = await authResendVerification();
+  if (result.success) {
     resendMessage.value = "Verification email sent.";
-  } catch {
-    resendMessage.value = "Failed to resend email.";
-  } finally {
-    resendLoading.value = false;
+  } else {
+    resendMessage.value = result.error || "Failed to resend email.";
   }
+  resendLoading.value = false;
 };
 </script>
 

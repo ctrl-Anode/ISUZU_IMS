@@ -5,94 +5,87 @@
   </div>
 
   <!-- MAIN CONTENT -->
-  <div v-else :class="themeClass" :style="themeStyle" class="h-screen flex flex-col">
-
-    <!-- Sticky Topbar -->
-    <!-- <div class="sticky top-0 z-50">
-      <Topbar />
-    </div> -->
+  <div v-else :class="themeClass" :style="themeStyle" class="min-h-screen flex flex-col">
 
     <!-- Scrollable Content -->
-    <div class="flex-1 overflow-y-auto p-6">
-      <h1 :class="textClass" class="text-3xl font-bold mb-6 border-l-4 border-red-600 pl-4 flex items-center gap-2">
-        <LayoutDashboard class="w-7 h-7 text-red-600" />
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+      <h1 :class="textClass" class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 border-l-4 border-red-600 pl-3 sm:pl-4 flex items-center gap-2">
+        <LayoutDashboard class="w-6 h-6 sm:w-7 sm:h-7 text-red-600" />
         Dashboard
       </h1>
 
       <!-- Inventory Summary -->
-      <div class="mb-8">
-        <h2 :class="textClass" class="text-2xl font-bold mb-4 flex items-center gap-2">
-          <Boxes class="w-6 h-6 text-red-600" />
+      <div class="mb-6 sm:mb-8">
+        <h2 :class="textClass" class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+          <Boxes class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
           Inventory Summary
         </h2>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
 
           <div :class="cardClass" :style="cardStyle"
-            class="shadow rounded-lg p-6 border-l-2 border-red-600 flex items-center gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-            <Package class="w-10 h-10 text-gray-600" />
-            <div>
-              <h3 :class="subTextClass" class="text-sm">Total Parts</h3>
-              <p :class="textClass" class="text-3xl font-bold">{{ inventoryItems.length }}</p>
+            class="shadow rounded-lg p-3 sm:p-4 lg:p-6 border-l-2 border-red-600 flex items-center gap-2 sm:gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <Package class="w-8 h-8 sm:w-10 sm:h-10 text-gray-600 flex-shrink-0" />
+            <div class="min-w-0">
+              <h3 :class="subTextClass" class="text-xs sm:text-sm truncate">Total Parts</h3>
+              <p :class="textClass" class="text-xl sm:text-2xl lg:text-3xl font-bold">{{ inventoryItems.length }}</p>
             </div>
           </div>
 
           <div :class="cardClass" :style="cardStyle"
-            class="shadow rounded-lg p-6 border-l-2 border-red-600 flex items-center gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-            <CheckCircle class="w-10 h-10 text-green-600" />
-            <div>
-              <h3 class="text-sm text-green-600">In Stock</h3>
-              <p class="text-3xl font-bold text-green-600">{{ inStock }}</p>
+            class="shadow rounded-lg p-3 sm:p-4 lg:p-6 border-l-2 border-red-600 flex items-center gap-2 sm:gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <CheckCircle class="w-8 h-8 sm:w-10 sm:h-10 text-green-600 flex-shrink-0" />
+            <div class="min-w-0">
+              <h3 class="text-xs sm:text-sm text-green-600 truncate">In Stock</h3>
+              <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600">{{ inStock }}</p>
             </div>
           </div>
 
           <div :class="cardClass" :style="cardStyle"
-            class="shadow rounded-lg p-6 border-l-2 border-red-600 flex items-center gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-            <AlertTriangle class="w-10 h-10 text-yellow-600" />
-            <div>
-              <h3 class="text-sm text-yellow-600">Low Stock</h3>
-              <p class="text-3xl font-bold text-yellow-600">{{ lowStock }}</p>
+            class="shadow rounded-lg p-3 sm:p-4 lg:p-6 border-l-2 border-red-600 flex items-center gap-2 sm:gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <AlertTriangle class="w-8 h-8 sm:w-10 sm:h-10 text-yellow-600 flex-shrink-0" />
+            <div class="min-w-0">
+              <h3 class="text-xs sm:text-sm text-yellow-600 truncate">Low Stock</h3>
+              <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-600">{{ lowStock }}</p>
             </div>
           </div>
 
           <div :class="cardClass" :style="cardStyle"
-            class="shadow rounded-lg p-6 border-l-2 border-red-600 flex items-center gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
-            <XCircle class="w-10 h-10 text-red-600" />
-            <div>
-              <h3 class="text-sm text-red-600">Out of Stock</h3>
-              <p class="text-3xl font-bold text-red-600">{{ outOfStock }}</p>
+            class="shadow rounded-lg p-3 sm:p-4 lg:p-6 border-l-2 border-red-600 flex items-center gap-2 sm:gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer">
+            <XCircle class="w-8 h-8 sm:w-10 sm:h-10 text-red-600 flex-shrink-0" />
+            <div class="min-w-0">
+              <h3 class="text-xs sm:text-sm text-red-600 truncate">Out of Stock</h3>
+              <p class="text-xl sm:text-2xl lg:text-3xl font-bold text-red-600">{{ outOfStock }}</p>
             </div>
           </div>
-
 
         </div>
       </div>
 
       <!-- Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-6 gap-6">
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
 
         <div :class="cardClass" :style="cardStyle"
-          class="shadow rounded-lg p-6 border-t-2 border-red-600 lg:col-span-2 hover:shadow-xl transition-all duration-300">
-          <h2 :class="textClass" class="text-xl font-bold mb-4 flex items-center gap-2">
-            <PieChart class="w-6 h-6 text-red-600" />
+          class="shadow rounded-lg p-4 sm:p-6 border-t-2 border-red-600 xl:col-span-1 hover:shadow-xl transition-all duration-300">
+          <h2 :class="textClass" class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+            <PieChart class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             Inventory Status
           </h2>
-          <div class="chart-wrapper">
+          <div class="chart-wrapper chart-wrapper-small">
             <canvas ref="statusChart"></canvas>
           </div>
         </div>
 
         <div :class="cardClass" :style="cardStyle"
-          class="shadow rounded-lg p-6 border-t-2 border-red-600 lg:col-span-4 hover:shadow-xl transition-all duration-300">
-          <h2 :class="textClass" class="text-xl font-bold mb-4 flex items-center gap-2">
-            <BarChart3 class="w-6 h-6 text-red-600" />
+          class="shadow rounded-lg p-4 sm:p-6 border-t-2 border-red-600 xl:col-span-2 hover:shadow-xl transition-all duration-300">
+          <h2 :class="textClass" class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+            <BarChart3 class="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
             Inventory by Category
           </h2>
           <div class="chart-wrapper">
             <canvas ref="categoryChart"></canvas>
           </div>
         </div>
-
 
       </div>
     </div>
@@ -101,13 +94,9 @@
 
 <script setup>
 import { ref, onMounted, computed, nextTick } from "vue";
-import { useRouter } from "vue-router";
-import { auth, db } from "../../Firebase/Firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { useAuth } from "../../composables/useAuth";
+import { db } from "../../Firebase/Firebase";
 import { collection, getDocs } from "firebase/firestore";
-//import Topbar from "../../components/Topbar.vue";
-
-/* 🔧 ADDED */
 import Loaders from "../../components/Loaders.vue";
 
 import {
@@ -154,8 +143,9 @@ const textClass = computed(() => isDarkMode.value ? 'text-white' : 'text-gray-80
 const subTextClass = computed(() => isDarkMode.value ? 'text-gray-300' : 'text-gray-600');
 
 /* ===== STATE ===== */
-const router = useRouter();
+const { user, isAuthenticated } = useAuth();
 const isLoading = ref(true);
+
 const inventoryItems = ref([]);
 const statusChart = ref(null);
 const categoryChart = ref(null);
@@ -170,8 +160,12 @@ const outOfStock = computed(() => inventoryItems.value.filter(i => i.status === 
 
 /* ===== LOAD INVENTORY ===== */
 const loadInventory = async (uid) => {
-  const snapshot = await getDocs(collection(db, "users", uid, "inventory"));
-  inventoryItems.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  try {
+    const snapshot = await getDocs(collection(db, "users", uid, "inventory"));
+    inventoryItems.value = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  } catch (error) {
+    console.error("Error loading inventory:", error);
+  }
 };
 
 /* ===== INIT CHARTS ===== */
@@ -209,26 +203,44 @@ const initCharts = () => {
   });
 };
 
-/* ===== AUTH ===== */
-onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      router.push("/");
-      return;
-    }
-    await loadInventory(user.uid);
+/* ===== LIFECYCLE ===== */
+onMounted(async () => {
+  if (user.value) {
+    await loadInventory(user.value.uid);
     isLoading.value = false;
     await nextTick();
     initCharts();
-  });
+  }
 });
 </script>
 
 <style scoped>
 .chart-wrapper {
   position: relative;
-  height: 320px;
+  height: 250px;
   width: 100%;
+}
+
+.chart-wrapper-small {
+  height: 200px;
+}
+
+@media (min-width: 640px) {
+  .chart-wrapper {
+    height: 280px;
+  }
+  .chart-wrapper-small {
+    height: 220px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-wrapper {
+    height: 320px;
+  }
+  .chart-wrapper-small {
+    height: 250px;
+  }
 }
 
 canvas {

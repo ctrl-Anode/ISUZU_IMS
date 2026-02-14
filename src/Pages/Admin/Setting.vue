@@ -7,11 +7,6 @@
   <!-- MAIN CONTENT -->
   <div v-else :class="themeClass" :style="themeStyle" class="min-h-screen flex flex-col">
 
-    <!-- Topbar (sticky) -->
-    <!-- <div class="sticky top-0 z-50">
-      <Topbar />
-    </div> -->
-
     <!-- Main Content -->
     <main class="flex-1 overflow-auto p-6">
 
@@ -21,12 +16,22 @@
           <SettingsIcon class="w-6 h-6 text-red-600" /> Settings
         </h1>
 
-        <button
-          @click="logout"
-          class="bg-red-600 text-white px-5 py-2 rounded flex items-center gap-2 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
-        >
-          <LogOutIcon class="w-5 h-5" /> Logout
-        </button>
+        <div class="flex items-center gap-4">
+          <!-- User Info -->
+          <div v-if="user" class="text-right">
+            <p class="font-medium">{{ user.displayName || user.email }}</p>
+            <p class="text-sm text-gray-500 capitalize">{{ userRole }}</p>
+          </div>
+          
+          <button
+            @click="handleLogout"
+            :disabled="isLoggingOut"
+            class="bg-red-600 text-white px-5 py-2 rounded flex items-center gap-2 hover:bg-red-700 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50"
+          >
+            <LogOutIcon class="w-5 h-5" /> 
+            {{ isLoggingOut ? 'Logging out...' : 'Logout' }}
+          </button>
+        </div>
 
       </div>
 
@@ -45,8 +50,6 @@
           <MapPinIcon class="w-5 h-5" /> Warehouse
         </button>
       </div>
-
-
 
       <!-- Status Messages -->
       <div v-if="isSaving" class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded mb-4 flex items-center gap-2">
@@ -184,29 +187,27 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from "vue";
-import { useRouter } from "vue-router";
-import { auth, db } from "../../Firebase/Firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useAuth } from "../../composables/useAuth";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-//import Topbar from "../../components/Topbar.vue";
-
-/* 🔧 ADDED */
+import { db } from "../../Firebase/Firebase";
 import Loaders from "../../components/Loaders.vue";
 
 import {
   SettingsIcon, LogOutIcon, UserIcon, PackageIcon, BellIcon, MapPinIcon,
-  UserCogIcon, SaveIcon, RefreshCcwIcon, BellRingIcon,
+  UserCogIcon, SaveIcon, BellRingIcon,
   Loader2Icon, CheckCircleIcon, XCircleIcon
 } from "lucide-vue-next";
 
+/* ===== AUTH ===== */
+const { user, userRole, logout } = useAuth();
+
 /* ===== STATE ===== */
-const router = useRouter();
 const activeTab = ref("general");
 const isLoading = ref(true);
+const isLoggingOut = ref(false);
 const isSaving = ref(false);
 const saveSuccess = ref(false);
 const saveError = ref(null);
-const currentUser = ref(null);
 
 /* ===== SETTINGS ===== */
 const defaultSettings = {
@@ -272,12 +273,21 @@ const applyTheme = (theme) => {
 
 /* ===== METHODS ===== */
 const saveSettings = async () => {
+  if (!user.value) return;
+  
   isSaving.value = true;
-  await setDoc(doc(db, "users", currentUser.value.uid, "settings", "preferences"), settings.value);
-  applyTheme(settings.value.general.theme); // Apply theme after saving
-  isSaving.value = false;
-  saveSuccess.value = true;
-  setTimeout(() => (saveSuccess.value = false), 3000);
+  saveError.value = null;
+  
+  try {
+    await setDoc(doc(db, "users", user.value.uid, "settings", "preferences"), settings.value);
+    applyTheme(settings.value.general.theme);
+    saveSuccess.value = true;
+    setTimeout(() => (saveSuccess.value = false), 3000);
+  } catch (error) {
+    saveError.value = "Failed to save settings";
+  } finally {
+    isSaving.value = false;
+  }
 };
 
 const addWarehouse = () => {
@@ -288,20 +298,25 @@ const removeWarehouse = (i) => {
   settings.value.warehouse.locations.splice(i, 1);
 };
 
-const logout = async () => {
-  await signOut(auth);
-  router.push("/");
+const handleLogout = async () => {
+  isLoggingOut.value = true;
+  await logout();
+  isLoggingOut.value = false;
 };
 
-/* ===== AUTH ===== */
-onMounted(() => {
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return router.push("/");
-    currentUser.value = user;
-    const snap = await getDoc(doc(db, "users", user.uid, "settings", "preferences"));
-    if (snap.exists()) settings.value = snap.data();
-    isLoading.value = false;
-  });
+/* ===== LIFECYCLE ===== */
+onMounted(async () => {
+  if (user.value) {
+    try {
+      const snap = await getDoc(doc(db, "users", user.value.uid, "settings", "preferences"));
+      if (snap.exists()) {
+        settings.value = snap.data();
+      }
+    } catch (error) {
+      console.error("Error loading settings:", error);
+    }
+  }
+  isLoading.value = false;
 });
 
 const tabClass = (tab) =>

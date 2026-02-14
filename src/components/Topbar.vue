@@ -43,7 +43,7 @@
           </router-link>
 
           <router-link
-            to="/sa-rotation"
+            to="/admin/sa-rotation"
             class="nav-link"
             active-class="nav-link-active"
           >
